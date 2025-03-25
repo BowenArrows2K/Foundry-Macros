@@ -1,0 +1,112 @@
+{
+  "id": "somnos-custom-bundle",
+  "title": "Somno's Custom Bundle",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "description": "Contains all of Somno Privatio's Foundry Files and compendiums.",
+  "authors": [
+    {
+      "name": "Somno Privatio",
+      "discord": "somnoprivatio",
+      "flags": {}
+    }
+  ],
+  "esmodules": ["scripts/somnos-custom-bundle.js"],
+  "scripts" : ["scripts/universal-listener.js"],
+  "socket": true,
+  "packs": [
+    {
+      "name": "somnos-actors",
+      "label": "Somno's Actors",
+      "path": "packs/somnos-actors",
+      "type": "Actor",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "somnos-items",
+      "label": "Somno's Items",
+      "path": "packs/somnos-items",
+      "type": "Item",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "somnos-journals",
+      "label": "Somno's Journals",
+      "path": "packs/somnos-journals",
+      "type": "JournalEntry",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "somnos-macros",
+      "label": "Somno's Macros",
+      "path": "packs/somnos-macros",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "flags": {}
+    },
+    {
+      "name": "somnos-playlists",
+      "label": "Somno's Playlists",
+      "path": "packs/somnos-playlists",
+      "type": "Playlist",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "somnos-rollable-tables",
+      "label": "Somno's Rollable Tables",
+      "path": "packs/somnos-rollable-tables",
+      "type": "RollTable",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "somnos-scenes",
+      "label": "Somno's Scenes",
+      "path": "packs/somnos-scenes",
+      "type": "Scene",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "Somno's Compendiums",
+      "sorting": "a",
+      "packs": ["somnos-actors", "somnos-items", "somnos-journals", "somnos-macros", "somnos-playlists", "somnos-rollable-tables", "somnos-scenes"]
+    }
+  ]
+}
