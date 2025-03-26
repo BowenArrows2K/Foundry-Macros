@@ -1,5 +1,5 @@
 const { ApplicationV2 } = foundry.applications.api;
-const windowTitle = game.user.isGM === true ? "GM's Currency Spender" : actor?.name + `'s Spending`;
+const windowTitle = game.user.isGM ? "GM's Currency Spender" : actor?.name + `'s Spending`;
 
 class CurrencySpenderApp extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -30,10 +30,11 @@ class CurrencySpenderApp extends ApplicationV2 {
     return { currency, totalGPValue };
   }
 
-  _calculatePayment(amountGP, currency, source) {
+  _calculatePayment(html, amount, currency, source) {
     const values = { pp: 1000, gp: 100, sp: 10, cp: 1 };
     const wallet = foundry.utils.deepClone(currency);
-    const totalCopper = Math.round(amountGP * 100);
+    const coinToGold = html.querySelector("#currency-spender-denom-select").value*amount;
+    const totalCopper = Math.round(coinToGold * 100);
     const paid = { pp: 0, gp: 0, sp: 0, cp: 0 };
     const change = { gp: 0, sp: 0, cp: 0 };
     const ideal = {};
@@ -63,12 +64,13 @@ class CurrencySpenderApp extends ApplicationV2 {
         wallet[type] -= ideal[type];
       }
     } else {
-      const valueTypes = ["cp", "sp", "gp", "pp"]
       const convList = {cp: "sp", sp: "gp", gp: "pp", pp: ""}
       const roundedCost = deepClone(purchaseValue);
       for (const [type, conv] of Object.entries(convList)) {
+        var valueTypes = ["cp", "sp", "gp", "pp"];
         if (roundedCost[type] === 0) continue;
         if (roundedCost[type] > wallet[type]) {
+          console.log(`Rounding ${type} to ${conv}`);
           if (type === "pp") {
             for (let type of valueTypes) {
               paid[type] = wallet[type];
@@ -79,7 +81,10 @@ class CurrencySpenderApp extends ApplicationV2 {
           } else {
             roundedCost[conv] += 1;
             for (let i = 0; i <= valueTypes.indexOf(type); i++) {
+              wallet[valueTypes[i]] += paid[valueTypes[i]];
+              paid[valueTypes[i]] = 0;
               roundedCost[valueTypes[i]] = 0;
+              console.log(`Setting ${valueTypes[i]} to 0`);
             };
             continue;
           }
@@ -152,12 +157,12 @@ class CurrencySpenderApp extends ApplicationV2 {
             ? `<div><strong style="color: green;">✔ Exact denominations available</strong></div>`
             : `<div><strong style="color: darkorange;">⚠ Using alternate denominations</strong></div>`
           }
-          <div><strong>Total:</strong> <span style="color: gold;">${amountGP.toFixed(2)} gp</span></div>
+          <div><strong>Total:</strong> <span style="color: gold;">${amount.toFixed(2)} gp</span></div>
           <div><strong>Deducting:</strong> <span style="color: red;">${spentMsg}</span></div>
-          <div><strong>Change:</strong> <span style="color: blue;">${changeMsg}</span></div>
+          <div><strong>Change:</strong> <span style="color: lightblue;">${changeMsg}</span></div>
           <div><strong>Purchase Value:</strong> <span style="color: green;">${purchaseVal}</span></div>
           <div style="margin-top: 0.5em;"><strong style="color: green;">✔ Sufficient Funds</strong></div>`
-          : `<div><strong>Total:</strong> ${amountGP.toFixed(2)} gp</div>
+          : `<div><strong>Total:</strong> ${amount.toFixed(2)} gp</div>
           <div><strong>Deducting:</strong> ${spentMsg}</div>
           ${(changeMsg !== "No change returned.") ?`<div><strong>Change:</strong> <span style="color: blue;">${changeMsg}</span></div>` : ""}
           <div><strong>Purchase Value:</strong> ${purchaseVal}</div>`
@@ -183,7 +188,7 @@ class CurrencySpenderApp extends ApplicationV2 {
     const amount = parseFloat(html.querySelector("#gold-amount")?.value);
     if (isNaN(amount) || amount <= 0) return ui.notifications.warn("Enter a valid gold amount.");
 
-    const result = this._calculatePayment(amount, actor.system?.currency ?? { cp: 0, sp: 0, gp: 0, pp: 0 }, "chat");
+    const result = this._calculatePayment(html, amount, actor.system?.currency ?? { cp: 0, sp: 0, gp: 0, pp: 0 }, "chat");
 
     if (!result.success) {
       return ui.notifications.error("Insufficient funds.");
@@ -205,17 +210,16 @@ class CurrencySpenderApp extends ApplicationV2 {
     this.close();
   }
 
-  async #updateCurrencySpender(container, actor) {
-    const body = container.querySelector("#currency-status");
+  async #updateCurrencySpender(html, actor) {
+    const status = html.querySelector("#currency-status");
     const { currency, totalGPValue } = await this.getData(actor);
 
-    body.innerHTML = `
+    status.innerHTML = `
         <strong>Current Funds:</strong><br />
         ${currency.pp} pp, ${currency.gp} gp, ${currency.sp} sp, ${currency.cp} cp<br />
         <strong>Total GP Value:</strong> ${totalGPValue} gp
     `;
   }
-
 
   async _renderHTML() {
     const members = game.actors.filter(actor =>
@@ -228,53 +232,76 @@ class CurrencySpenderApp extends ApplicationV2 {
     const { currency, totalGPValue } = await this.getData(actor);
     if (!actor) return document.createElement("div");
     
-    const select = document.createElement("select");
-    const options = members.map(member => `<option value="${member.id}">${member.name}</option>`).join("");
-    select.id = "currency-spender-select";
-    select.innerHTML = `${options}`;
+    const charSelect = document.createElement("select");
+    const charOptions = members.map(member => `<option value="${member.id}">${member.name}</option>`).join("");
+    charSelect.id = "currency-spender-character-select";
+    charSelect.style.width = "auto";
+    charSelect.innerHTML = charOptions;
+
+    const denomSelect = document.createElement("select");
+    const denomValue = { pp: 10, gp: 1, sp: 0.1, cp: 0.01 };
+    const denomOptions = Object.entries(denomValue).map(([k, v]) => {
+      if (k === "gp") {
+        return `<option value=${v} selected>${k}</option>`;
+      } else {
+        return `<option value=${v}>${k}</option>`;
+      }
+    }).join("");    
+    denomSelect.id = "currency-spender-denom-select";
+    denomSelect.style.width = "75px";
+    denomSelect.innerHTML = denomOptions;
+    
 
     const container = document.createElement("div");
     container.id = "currency-spender-container";
     const style = document.createElement("style");
     style.textContent = `
       #currency-spender-body {
-        text-align: center; 
+        text-align: center;
       }
       #currency-spender-body input, #currency-spender-body button {
-        width: 100%; margin-top: 0.5em; padding: 0.5em; font-size: 1em;
+        width: 100%; padding: 0.5em; font-size: 1em;
       }
       #currency-spender-body input {
-        color: #fff; border: 1px solid #555;
+        color: #fff;
+      }
+      #currency-spender-body select {
+        text-align: center; 
       }
       #currency-spender-body button {
         color: #fff; border: 1px solid #666; border-radius: 6px; font-weight: bold;
       }
-
       #currency-spender-body .amount-input {
-        display: flex; align-items: center; vertical-align: middle;
+        display: flex; 
+        align-items: center; 
+        vertical-align: middle;
+        margin: 0.25rem;
+      }
+      #currency-spender-body .amount-input label,
+      #currency-spender-body .amount-input input,
+      #currency-spender-body .amount-input select {
+        margin: 0.25rem;
       }
       #currency-spender-body .currency-preview {
-        margin-top: 0.5em; font-size: 0.95em; text-align: center;
+        font-size: 0.95em; text-align: center;
       }
     `;
     container.appendChild(style);
     const body = document.createElement("div");
     body.id = "currency-spender-body";
     body.innerHTML = `
-      ${game.user.isGM ? select.outerHTML : ""}
+      ${game.user.isGM ? charSelect.outerHTML : ""}
       <div class="amount-input">
-        <label style="white-space: nowrap;">Gold to Spend:</label>
+        <label style="white-space: nowrap;">Amount to Spend:</label>
         <input type="number" id="gold-amount" min="0" step="0.01" />
+        ${denomSelect.outerHTML}
       </div>
-      <div class="currency-preview" id="currency-status">
-        <strong>Current Funds:</strong><br />
-        ${currency.pp} pp, ${currency.gp} gp, ${currency.sp} sp, ${currency.cp} cp<br />
-        <strong>Total GP Value:</strong> ${totalGPValue} gp
-      </div>
+      <div class="currency-preview" id="currency-status"></div>
       <div class="currency-preview" id="deduction-preview" style="display:none;"></div>
       <button data-action="spendGold">Spend</button>
     `;
     container.appendChild(body);
+    this.#updateCurrencySpender(container, actor);
 
     let debounce;
     container.querySelector("#gold-amount").addEventListener("input", () => {
@@ -282,8 +309,13 @@ class CurrencySpenderApp extends ApplicationV2 {
       debounce = setTimeout(() => this._updatePreview(container), 150);
     });
 
+    container.querySelector("#currency-spender-denom-select").addEventListener("change", () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => this._updatePreview(container), 150);
+    });
+
     if (game.user.isGM) {
-      container.querySelector("#currency-spender-select").addEventListener("change", (event) => {
+      container.querySelector("#currency-spender-character-select").addEventListener("change", (event) => {
         const selectedValue = event.target.value;
         const actor = game.actors.get(selectedValue);
         this.#updateCurrencySpender(container, actor);
@@ -304,9 +336,9 @@ class CurrencySpenderApp extends ApplicationV2 {
     const previewDiv = html.querySelector("#deduction-preview");
     if (isNaN(amount) || amount <= 0) return previewDiv.style.display = "none";
 
-    const actor = html.querySelector("#currency-spender-select")?.value ? game.actors.get(html.querySelector("#currency-spender-select")?.value) : game.user.character;
+    const actor = html.querySelector("#currency-spender-character-select")?.value ? game.actors.get(html.querySelector("#currency-spender-character-select")?.value) : game.user.character;
     const currency = actor?.system.currency ?? { cp: 0, sp: 0, gp: 0, pp: 0 };
-    const result = this._calculatePayment(amount, currency, "preview");
+    const result = this._calculatePayment(html, amount, currency, "preview");
 
     previewDiv.innerHTML = result.messageHTML;
     previewDiv.style.display = "block";
