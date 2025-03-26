@@ -182,7 +182,7 @@ class CurrencySpenderApp extends ApplicationV2 {
   }
 
   async _handleSpendGold(html) {
-    const actor = html.querySelector("#currency-spender-select")?.value ? game.actors.get(html.querySelector("#currency-spender-select")?.value) : game.user.character;
+    const actor = game.user.isGM ? game.actors.get(html.querySelector("#currency-spender-character-select")?.value) : game.user.character;
     if (!actor) return ui.notifications.warn("You must have a linked character.");
 
     const amount = parseFloat(html.querySelector("#gold-amount")?.value);
