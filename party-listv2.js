@@ -104,6 +104,7 @@ class PartyMembersAppV2 extends ApplicationV2 {
         overflow: hidden;
       }
       #party-members-app .health-label {
+        overflow: hidden;
         position: absolute;
         top: 0;
         left: 0;
@@ -115,7 +116,6 @@ class PartyMembersAppV2 extends ApplicationV2 {
         font-weight: bold;
         color: #fff;
         text-shadow: 0 0 2px #000;
-        pointer-events: none;
         white-space: nowrap;
       }
       #party-members-app .temp-hp {
@@ -138,6 +138,21 @@ class PartyMembersAppV2 extends ApplicationV2 {
         height: 32px;
         object-fit: cover;
       }
+      #party-members-app .hp-input {
+        display: inline;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        text-align: right;
+        border: none;
+        background: none;
+        font-size: 1em;
+        line-height: 16px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 0 2px #000;
+      }
       #party-members-app .clickable-name {
         cursor: pointer;
         color: var(--color-text-hyperlink);
@@ -153,6 +168,7 @@ class PartyMembersAppV2 extends ApplicationV2 {
           <th data-sort="name">Name</th>
           <th>★</th>
           <th data-sort="class">Class</th>
+          <th data-sort="background">Background</th>
           <th data-sort="hp">HP</th>
           <th data-sort="ac">AC</th>
           <th data-sort="pp">👁️</th>
@@ -226,14 +242,15 @@ class PartyMembersAppV2 extends ApplicationV2 {
       const passive = member.system.skills.prc.passive;
       const inspiration = member.system.attributes?.inspiration ? "✨" : "○";
       const classes = member.items.filter(i => i.type === "class").map(cls => `${cls.name} (${cls.system.levels})`).join(", ");
+      const background = member.system.details.background;
       const currencies = member.system.currency;
       const totalMemberGP = (currencies.pp * 10) + currencies.gp + (currencies.ep / 2) + (currencies.sp / 10) + (currencies.cp / 100);
       totalGP += totalMemberGP;
       const gpFormatted = totalMemberGP.toFixed(2);
 
-      const hpText = `${hp.value} / ${hp.max}`;
+      const hpText = `<input class="hp-input" id="hp-input-${member.id}" style="max-width: ${(`${hp.value}`.length * 10)}px;" type="string" max="${hp.max}" value="${hp.value}"></input>/${hp.max}`;
       const tempText = hp.temp > 0 ? ` <span class=\"temp-hp\">(+${hp.temp})</span>` : "";
-      const textWidth = hpText.length * 8 + 40;
+      const textWidth = (hp.value +"/"+ hp.max + tempText).length * 8 + 40;
       const totalHP = hp.max + (hp.temp || 0);
       const hpPercent = (hp.value / totalHP) * 100;
       const tempPercent = ((hp.temp || 0) / totalHP) * 100;
@@ -245,8 +262,9 @@ class PartyMembersAppV2 extends ApplicationV2 {
         <tr${highlightClass}>
           <td><img src="${member.img}" class="portrait-img" alt="portrait"></td>
           <td><span class="clickable-name" data-actor-id="${member.id}">${member.name}</span></td>
-          <td>${inspiration}</td>
+          <td class="clickable-inspiration" data-actor-id="${member.id}">${inspiration}</td>
           <td>${classes}</td>
+          <td>${background.name}</td>
           <td>
             <div class="health-container" style="min-width: ${textWidth}px;">
               <div class="healthbar" style="background: ${barGradient};"></div>
@@ -264,12 +282,33 @@ class PartyMembersAppV2 extends ApplicationV2 {
 
     const totalRow = `
       <tr>
-        <td colspan="7" style="text-align: right; font-weight: bold;">Total GP:</td>
+        <td colspan="8" style="text-align: right; font-weight: bold;">Total GP:</td>
         <td style="font-weight: bold; padding: 0.5em;">${totalGP.toFixed(2)} gp</td>
       </tr>
     `;
 
     tbody.innerHTML = partyHtml + totalRow;
+
+    container.querySelectorAll("input[id^=hp-input-]").forEach(input => {
+      input.addEventListener("change", (event) => {
+        const actor = game.actors.get(input.id.replace("hp-input-", ""));
+        if (event.target.value.charAt(0) === "-" || event.target.value.charAt(0) === "+") {
+          var currenthp = actor.system.attributes.hp.value
+          var finalHP = currenthp + parseInt(event.target.value)
+          actor.update({ "system.attributes.hp.value": parseInt(finalHP) });
+        } else {
+          var newHP = parseInt(event.target.value);
+          actor.update({ "system.attributes.hp.value": newHP });
+        }
+      });
+    });
+
+    container.querySelectorAll(".clickable-inspiration").forEach(el => {
+      el.addEventListener("click", () => {
+        const actor = game.actors.get(el.dataset.actorId);
+        if (actor) actor.update({ "system.attributes.inspiration": !actor.system.attributes.inspiration });
+      });
+    });
 
     container.querySelectorAll(".clickable-name").forEach(el => {
       el.addEventListener("click", () => {
