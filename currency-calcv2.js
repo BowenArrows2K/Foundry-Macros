@@ -159,13 +159,13 @@ class CurrencySpenderApp extends ApplicationV2 {
           }
           <div><strong>Total:</strong> <span style="color: gold;">${amount.toFixed(2)} gp</span></div>
           <div><strong>Deducting:</strong> <span style="color: red;">${spentMsg}</span></div>
-          <div><strong>Change:</strong> <span style="color: lightblue;">${changeMsg}</span></div>
-          <div><strong>Purchase Value:</strong> <span style="color: green;">${purchaseVal}</span></div>
+          <div><strong>Change:</strong> <span style="color: aqua;">${changeMsg}</span></div>
+          <div><strong>Purchase Value:</strong> <span style="color: limegreen;">${purchaseVal}</span></div>
           <div style="margin-top: 0.5em;"><strong style="color: green;">✔ Sufficient Funds</strong></div>`
-          : `<div><strong>Total:</strong> ${amount.toFixed(2)} gp</div>
-          <div><strong>Deducting:</strong> ${spentMsg}</div>
+          : `<div><strong>Total:</strong> <span style="color: rgb(244 199 56);">${amount.toFixed(2)} gp</span></div>
+          <div><strong>Deducting:</strong> <span style="color: red;">${spentMsg}</span></div>
           ${(changeMsg !== "No change returned.") ?`<div><strong>Change:</strong> <span style="color: blue;">${changeMsg}</span></div>` : ""}
-          <div><strong>Purchase Value:</strong> ${purchaseVal}</div>`
+          <div><strong>Purchase Value:</strong> <span style="color: forestgreen;">${purchaseVal}</span></div>`
         }
       </div>
     `;
@@ -259,8 +259,12 @@ class CurrencySpenderApp extends ApplicationV2 {
       #currency-spender-body {
         text-align: center;
       }
-      #currency-spender-body input, #currency-spender-body button {
-        width: 100%; padding: 0.5em; font-size: 1em;
+      #currency-spender-body input, 
+      #currency-spender-body button {
+        width: 100%; 
+        padding: 0.5em; 
+        font-size: 1em;
+        margin-top: 0.5em;
       }
       #currency-spender-body input {
         color: #fff;
@@ -269,7 +273,11 @@ class CurrencySpenderApp extends ApplicationV2 {
         text-align: center; 
       }
       #currency-spender-body button {
-        color: #fff; border: 1px solid #666; border-radius: 6px; font-weight: bold;
+        color: rgb(244 199 56); 
+        border: 1px; 
+        solid #666; 
+        border-radius: 6px; 
+        font-weight: bold;
       }
       #currency-spender-body .amount-input {
         display: flex; 
