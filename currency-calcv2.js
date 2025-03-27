@@ -33,6 +33,7 @@ class CurrencySpenderApp extends ApplicationV2 {
   _calculatePayment(html, amount, currency, source) {
     const values = { pp: 1000, gp: 100, sp: 10, cp: 1 };
     const wallet = foundry.utils.deepClone(currency);
+    const coinType = html.querySelector("#currency-spender-denom-select option:checked").textContent;
     const coinToGold = html.querySelector("#currency-spender-denom-select").value*amount;
     const totalCopper = Math.round(coinToGold * 100);
     const paid = { pp: 0, gp: 0, sp: 0, cp: 0 };
@@ -157,7 +158,7 @@ class CurrencySpenderApp extends ApplicationV2 {
             ? `<div><strong style="color: green;">✔ Exact denominations available</strong></div>`
             : `<div><strong style="color: darkorange;">⚠ Using alternate denominations</strong></div>`
           }
-          <div><strong>Total:</strong> <span style="color: gold;">${amount.toFixed(2)} gp</span></div>
+          <div><strong>Total:</strong> <span style="color: gold;">${amount.toFixed(2)} ${coinType}</span></div>
           <div><strong>Deducting:</strong> <span style="color: red;">${spentMsg}</span></div>
           <div><strong>Change:</strong> <span style="color: aqua;">${changeMsg}</span></div>
           <div><strong>Purchase Value:</strong> <span style="color: limegreen;">${purchaseVal}</span></div>
@@ -186,7 +187,7 @@ class CurrencySpenderApp extends ApplicationV2 {
     if (!actor) return ui.notifications.warn("You must have a linked character.");
 
     const amount = parseFloat(html.querySelector("#gold-amount")?.value);
-    if (isNaN(amount) || amount <= 0) return ui.notifications.warn("Enter a valid gold amount.");
+    if (isNaN(amount) || amount <= 0) return ui.notifications.warn("Enter a valid amount.");
 
     const result = this._calculatePayment(html, amount, actor.system?.currency ?? { cp: 0, sp: 0, gp: 0, pp: 0 }, "chat");
 
