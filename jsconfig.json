@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "CommonJS"
+    },
+    "include": [
+        "../**/*",
+        "C:/Program Files/Foundry Virtual Tabletop/resources/app/**/*",
+        "C:/Users/BowenArrows/AppData/Local/FoundryVTT/Data/systems/**/*"
+    ]
+}
